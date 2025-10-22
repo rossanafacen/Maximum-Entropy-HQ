@@ -1,18 +1,8 @@
-using TensorCast
-using Tullio
-using Symbolics
-using Interpolations
-using HCubature
-using BenchmarkTools
-using LinearAlgebra
-using StaticArrays
-using NonlinearSolve
-using DelimitedFiles
 
 
-include("header.jl")
-include("1d_viscous_HQ_cilindrical_fugacity.jl")
-include("maximum_entropy_functions.jl")
+
+
+
 #include(pwd()*"\\src\\spectra_fastreso_dict.jl")
 # @code_warntype
 # @benchmark

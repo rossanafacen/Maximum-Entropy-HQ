@@ -5,9 +5,7 @@ function charm_density_integrand(ur,T,fug,nur,pt,m,etap,phip,mult_diff)
     mt = sqrt(pt^2+m^2)
     udotp= -ut*mt*cosh(etap-eta)+ur*pt*cos(phip-phi)
     return -udotp*f_ME(ur,T,fug,nur,pt,m,etap,phip,mult_diff)/(2*pi)^3*pt #density part of total current N^r
-    #return mt*cosh(etap-eta)*f_ME(ur,T,fug,nur,pt,m,etap,phip,mult_diff)/(2*pi)^3*pt #time part of total current N^r
     
-    #return f_ME(ur,T,fug,pt,m,etap,phip,mult_diff)/(2*pi)^3*pt
 end
 
 function charm_current_integrand(ur,T,fug,nur,pt,m,etap,phip,mult_diff)

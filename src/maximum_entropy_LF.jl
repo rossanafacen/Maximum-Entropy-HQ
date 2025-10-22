@@ -1,47 +1,11 @@
-using TensorCast
-using Tullio
-using Symbolics
-using Interpolations
-using HCubature
-using BenchmarkTools
-using LinearAlgebra
-using StaticArrays
-using NonlinearSolve
 
-
-
-include("src/discretization.jl")
-include("src/picewisefunction.jl")
-include("src/discreteFields.jl")
-include("src/trento_revised.jl")
-include("src/generating_kernels.jl")
-include("src/spectra_fastreso_dict.jl")
-include("src/particle_dictionary.jl")
-#include("src/spectra.jl")
-
-using DifferentialEquations
-using StructArrays
-using Plots
-using Interpolations
-using CSV
-include("header.jl")
-include("1d_viscous_cilindrical.jl")
-# @code_warntype
-# @benchmark
-
-#usa linearalgebra al posto di tullio dove possibile, è piu veloce
-#usa static vectors
 
 """
 dot(x,y,g)
 x index up, y index up, g index down down
 returns scalar product: x^μ g_{μν} y^ν = x^μ y_μ
 """
-#=function dot(x,y,g)
-    @tullio scalar := x[i] * g[i,j] * y[j]
-    return scalar
-end
-=#
+
 
 @code_warntype dot(x,g,y)
 @benchmark dot($x,$g,$y)

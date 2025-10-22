@@ -1,0 +1,21 @@
+name = "MaximumEntropy"
+uuid = "3009f659-cc7f-4c8f-93f4-1926c60516fb"
+version = "0.1.0-DEV"
+authors = ["rossanafacen <rossana.facen@stud.uni-heidelberg.de>"]
+
+[deps]
+BenchmarkTools = "6e4b80f9-dd63-53aa-95a3-0cdb28fa8baf"
+CSV = "336ed68f-0bac-5ca0-87d4-7b16caf5d00b"
+Fluidum = "a881c433-3e17-400b-981d-9b1f368d4109"
+NonlinearSolve = "8913a72c-1f9b-4ce2-8d82-65094dcecaec"
+Symbolics = "0c5d862f-8b57-4792-8d23-62f2024744c7"
+TensorCast = "02d47bb6-7ce6-556a-be16-bb1710789e2b"
+Tullio = "bc48ee85-29a4-5162-ae0b-a64e1601d4bc"
+
+[compat]
+BenchmarkTools = "1.6.3"
+CSV = "0.10.15"
+NonlinearSolve = "4.12.0"
+Symbolics = "6.56.0"
+TensorCast = "0.4.9"
+Tullio = "0.3.8"
