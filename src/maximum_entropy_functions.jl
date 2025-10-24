@@ -37,10 +37,7 @@ end
 
 function charm_current(ur,T,m,fug,nur,mult_diff;pt_min=0.,pt_max=8.0,phip_min=0,phip_max=2pi,etap_min=0,etap_max=10,rtol=10E-4)
 res, err = hcubature( b->2*fmGeV^3*charm_current_integrand(ur,T,fug,nur,b[1],m,b[3],b[2],mult_diff),(pt_min,phip_min,etap_min),(pt_max,phip_max,etap_max))
-#=if res < 10E-5
-    res = 10E-5
-end
-return res=#
+
 end
 
 function charm_total_current(ur,T,m,fug,nur,mult_diff;pt_min=0.,pt_max=8.0,phip_min=0,phip_max=2pi,etap_min=0,etap_max=10,rtol=10E-4)
@@ -60,9 +57,6 @@ function f_ME(ur,T,fug,nur,pt,m,etap,phip,mult_diff)
     udotp= -ut*mt*cosh(etap-eta)+ur*pt*cos(phip-phi)
     nut = nur*ur/ut
     
-    #pp = pt^2+mt^2/2*(cosh(2etap-2eta)-1)+ur^2*(pt^2cos(phip-phi)^2+mt^2cosh(2etap-2eta))-2ut*ur*mt*pt*cos(phip-phi)*cosh(etap-eta)
-    #gpp::Float64 = -ur^2*(g1+g2)*(mt*cosh(etap-eta))^2-2*ut*ur*(g1+g2)*mt*pt*cosh(etap-eta)*cos(phip-phi)-ut^2*(g1+g2)*(pt*cos(phip-phi))^2
-    #arg = udotp/T+fug-mult_diff*pt*cos(phip-phi)/udotp
     
     #new entropy definition
     n = federica(T,fug,fluidpropery.eos)[1]
