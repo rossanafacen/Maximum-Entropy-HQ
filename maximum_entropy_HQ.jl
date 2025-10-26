@@ -33,27 +33,7 @@ f_ME(ur,T,fu,pt,m,etap,phip,mult_diff)
 -ut*mt*cosh(etap-eta)+ur*pt*cos(phip-phi)
 =#
 
-eos=Heavy_Quark()
-fluidpropery=EquationsOfStates.FluidProperties(eos,EquationsOfStates.QGPViscosity(0.,0.2),EquationsOfStates.ZeroBulkViscosity(),EquationsOfStates.HQdiffusion(0.2,1.5))
-#fluidpropery=EquationsOfStates.FluidProperties(eos,EquationsOfStates.QGPViscosity(0.,0.2),EquationsOfStates.ZeroBulkViscosity(),EquationsOfStates.ZeroDiffusion())
 
-discretization,oned_visc_hydro_discrete, phi1 = initial_conditions(eos;norm=3,rdrop=4.0,case = "test")
-#ohh=freeze_out_routine(oned_visc_hydro_discrete,matrxi1d_visc_HQ!,fluidpropery,phi1,tspan)
-
-# ok questo é per risolverlo e basta 
-#prob=ODEProblem((du,u,p,t)->basicupwinding(du,u,t,threed_visc_hydro_discrete,matrxi3d_visc,fluidpropery),phi,tspan);
-
-#solve(prob,Tsit5();save_everystep=false)
-
-# questo ti preparara automaticamente il ODEProblem senza farlo a mano 
-
-
-tspan=(0.4,10.0)
-res=oneshoot(oned_visc_hydro_discrete,matrxi1d_visc_HQ!,fluidpropery,phi1,tspan)
-#int_nodiff=test_integral_cauchy(res,discretization.grid,tspan,fluidpropery.eos)
-#int_nodiff
-#plot_fields_evolution(res, discretization, tspan,fluidpropery;save=false)
-#plot(res(0.4)[1,:])
 
 
 #*******METHOD 1: lambdas through Equations of Motion

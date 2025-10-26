@@ -13,6 +13,6 @@ using Fluidum
 #include("maximum_entropy_functions_2d.jl")
 #include("maximum_entropy_HQ_2d.jl")
 #include("maximum_entropy_HQ.jl")
-#include("maximum_entropy_LF.jl")
+include("maximum_entropy_LF.jl")
 
 end 
