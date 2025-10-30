@@ -1,43 +1,39 @@
 
-
-
-
-
-#include(pwd()*"\\src\\spectra_fastreso_dict.jl")
-# @code_warntype
-# @benchmark
-
-
-#some testing
-#=
-#ur = 0.1
-etap=0.0
-phip=0.0
-m = 1.5
-mult_E=1.0
-eta = 0.0
-ur=1
-phi = 0.0
-T = 0.16
-fu = 3
-mult_P=1.0
-pt=0.5
-mult_shear=1.0
-g1= 0.1
-g2 =0.1
-mult_diff = 0
-mult_n = 0
-ut = sqrt(1+ur^2)
-mt = sqrt(pt^2+m^2)
-f_ME(ur,T,fu,pt,m,etap,phip,mult_diff)
--ut*mt*cosh(etap-eta)+ur*pt*cos(phip-phi)
-=#
-
-
-
-
 #*******METHOD 1: lambdas through Equations of Motion
+
+function pr2_integrand(ur,T,fug,nur,pt,m,etap,phip,mult_diff)
+    eta = 0.0
+    phi = 0.0
+    ut = sqrt(1+ur^2)
+    mt = sqrt(pt^2+m^2)
+    udotp= -ut*mt*cosh(etap-eta)+ur*pt*cos(phip-phi)
+    pr = pt*cos(phip-phi)
+    return -pr^2/udotp*f_ME(ur,T,fug,nur,pt,m,etap,phip,mult_diff)/(2*pi)^3*pt
+end
+
+
+function lambda_evolution(res;m = 1.5, pt_min=0.0, pt_max=8.0, phip_min=0.0, phip_max=2pi, etap_min=0.0, etap_max=10)
+    lr = zeros(19,150)
+
+    ur = res(t)[2,i]
+    T = res(t)[1,i]
+    fug = res(t)[6,i]
+    nur = res(t)[7,i]
+    n = thermodynamic(T,fug,eos.hadron_list).pressure
+    
+    ut = sqrt(1+ur^2)
+    mt = sqrt(pt^2+m^2)
+    udotp= -ut*mt*cosh(etap-eta)+ur*pt*cos(phip-phi)
+    pr2_integral, err = hcubature( b->2*fmGeV^3*pr2_integrand(ur,T,fug,nur,b[1],m,b[3],b[2],lr[tstep,i]),(pt_min,phip_min,etap_min),(pt_max,phip_max,etap_max))
+    lr[tstep+1,i] = lr[tstep,i]+dt[tstep]/pr2_integral*dnu[i]
+
+    
+end
+
+
+
 res.t[2]
+#how was this calculated? 
 dnu=readdlm("C:\\Users\\feder\\OneDrive\\Desktop\\PhD\\maximum_entropy\\dphi_time\\dnudt_"*string(res.t[1])*".txt")
 dt = [res.t[i]-res.t[i-1] for i in 2:length(res.t)]
 lr = zeros(19,150)
@@ -45,35 +41,34 @@ for tstep in (18)
     t = res.t[tstep]
     dnu=readdlm("C:\\Users\\feder\\OneDrive\\Desktop\\PhD\\maximum_entropy\\dphi_time\\dnudt_"*string(t)*".txt")
     for i in 1:150
-    ur = res(t)[2,i]
-    T = res(t)[1,i]
-    fuggg = res(t)[6,i]
-    nur = res(t)[7,i]
-    m = 1.5
-    function integrand(ur,T,fug,nur,pt,m,etap,phip,mult_diff)
-        eta = 0.0
-        phi = 0.0
-        ut = sqrt(1+ur^2)
-        mt = sqrt(pt^2+m^2)
-        udotp= -ut*mt*cosh(etap-eta)+ur*pt*cos(phip-phi)
-        return -pt^2/udotp*f_ME(ur,T,fug,nur,pt,m,etap,phip,mult_diff)/(2*pi)^3*pt
-    end
-    pt_min=0.0
-    pt_max=8.0
-    phip_min=0.0
-    phip_max=2pi
-    etap_min=0.0
-    etap_max=10
-    #println("evaluating integral...")
-    integral, err = hcubature( b->2*fmGeV^3*integrand(ur,T,fuggg,nur,b[1],m,b[3],b[2],lr[tstep,i]),(pt_min,phip_min,etap_min),(pt_max,phip_max,etap_max))
-    n= federica(res(t)[1,i],res(t)[6,i],eos)
-    nu = res(t)[7,i]
-    lr[tstep+1,i] = lr[tstep,i]+dt[tstep]/integral*dnu[i]
-    #detM = n*integral + nu^2
-    #invM = SMatrix{2,2}((s, nu), (nu, -n))
-    end
-    open("C:\\Users\\feder\\OneDrive\\Desktop\\PhD\\maximum_entropy\\lambda_r_"*string(t)*".txt", "w") do io
-        writedlm(io, [lr[tstep,:]] ,"\n")
+        ur = res(t)[2,i]
+        T = res(t)[1,i]
+        fuggg = res(t)[6,i]
+        nur = res(t)[7,i]
+        m = 1.5
+        function integrand(ur,T,fug,nur,pt,m,etap,phip,mult_diff)
+            eta = 0.0
+            phi = 0.0
+            ut = sqrt(1+ur^2)
+            mt = sqrt(pt^2+m^2)
+            udotp= -ut*mt*cosh(etap-eta)+ur*pt*cos(phip-phi)
+            return -pt^2/udotp*f_ME(ur,T,fug,nur,pt,m,etap,phip,mult_diff)/(2*pi)^3*pt
+        end
+        pt_min=0.0
+        pt_max=8.0
+        phip_min=0.0
+        phip_max=2pi
+        etap_min=0.0
+        etap_max=10
+        #println("evaluating integral...")
+        integral, err = hcubature( b->2*fmGeV^3*integrand(ur,T,fuggg,nur,b[1],m,b[3],b[2],lr[tstep,i]),(pt_min,phip_min,etap_min),(pt_max,phip_max,etap_max))
+        n= federica(res(t)[1,i],res(t)[6,i],eos)
+        nu = res(t)[7,i]
+        lr[tstep+1,i] = lr[tstep,i]+dt[tstep]/integral*dnu[i]
+
+        end
+        open("C:\\Users\\feder\\OneDrive\\Desktop\\PhD\\maximum_entropy\\lambda_r_"*string(t)*".txt", "w") do io
+            writedlm(io, [lr[tstep,:]] ,"\n")
     end
     
 end
