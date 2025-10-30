@@ -1,5 +1,4 @@
 """charm distribution function that depends only on one lagrange multiplier 
-When integrating for rapidity and phi, the  
 """
 function f_ME(ur,T,fug,pt,m,eta,phi,etap,phip,mult_diff)
     #@spack a, b, c = multipliers(...)
@@ -27,8 +26,7 @@ function charm_diff_current_integrand(ur,T,fug,pt,m,eta,phi,etap,phip,mult_diff)
     return pt*cos(phip-phi)*f_ME(ur,T,fug,pt,m,eta,phi,etap,phip,mult_diff)/(2*pi)^3*pt   
 end
 
-"""
-"""
+"""total radial charge current"""
 function charm_total_current_integrand(ur,T,fug,pt,m,eta,phi,etap,phip,mult_diff)
     ut = sqrt(1+ur^2)
     mt = sqrt(pt^2+m^2)
@@ -133,7 +131,6 @@ function distr_function_wrap(result, discretization::CartesianDiscretization, t,
     phi = 0
     #x = discretization.grid[10][1]
     sol1 = []
-    #for i in (1)
     for i in 2:lastindex(discretization.grid)-1
         T = result(t)[1,i]
         ur = result(t)[2,i]
