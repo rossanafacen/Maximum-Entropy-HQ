@@ -79,3 +79,20 @@ function distr_function_2(result, discretization::CartesianDiscretization, t; gu
     return (sol1,sol2) 
 end
 
+
+
+
+sol1 = readdlm("C:\\Users\\feder\\OneDrive\\Desktop\\PhD\\maximum_entropy\\ME_1d_1fm.txt") 
+sol = [eval(Meta.parse(sol1[i,3]))[1] for i in 1:lastindex(discretization.grid)-2]
+integral_cauchy_ME(res,1,discretization.grid,sol0)
+regularize!(sol0,discretization)
+
+for t in (5)
+    sol1 = readdlm("C:\\Users\\feder\\OneDrive\\Desktop\\PhD\\maximum_entropy\\ME_1d_"*string(t)*"fm.txt") 
+    sol = [eval(Meta.parse(sol1[i,3]))[1] for i in 1:lastindex(discretization.grid)-2]
+    
+    multdiff=LinearInterpolation([discretization.grid[i][1] for i in 2:lastindex(discretization.grid)-1],sol[:];extrapolation_bc=Flat())
+    
+    integral,err =integral_cauchy_ME(res,t,discretization.grid,multdiff)
+    
+end
