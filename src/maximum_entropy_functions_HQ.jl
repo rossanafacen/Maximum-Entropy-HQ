@@ -135,7 +135,6 @@ function distr_function_wrap(result, discretization::CartesianDiscretization, t,
         T = result(t)[1,i]
         ur = result(t)[2,i]
         fug = result(t)[6,i]
-        nur = result(t)[7,i]
         mult_diff = sol[i]
         push!(sol1,f_ME(ur,T,fug,pt,m,eta,phi,etap,phip,mult_diff))   
     end

@@ -46,7 +46,7 @@ function lagrangian_multipliers_system_2(unknown,ur,T,m,n,nur)
     return SVector{2}(eq_charm_1,eq_charm_2)
 end
 
-function distr_function_2(result, discretization::CartesianDiscretization, t; guess_n = 5.0, guess_nu = -3, diff_n = 0.0,diff_nu = 0.0, m = 1.5)  
+function distr_function_2d(result, discretization::CartesianDiscretization, t; guess_n = 5.0, guess_nu = -3, diff_n = 0.0,diff_nu = 0.0, m = 1.5)  
     x = [discretization.grid[i][1] for i in 2:lastindex(discretization.grid)-1]
     sol1 = []
     sol2 = []
@@ -79,20 +79,54 @@ function distr_function_2(result, discretization::CartesianDiscretization, t; gu
     return (sol1,sol2) 
 end
 
+function regularize_2d!(sol1,discretization)
+    x = [discretization.grid[i][1] for i in 2:lastindex(discretization.grid)-1]
+    sol = [zeros(2) for _ in 1:length(discretization.grid)-2]
+    j = 0
+    for i in eachindex(x)
+        sol[i][1]=sol1[i].u[1]
+        if isnan(sol1[i].u[1])
+            j = i 
+            @show j
+            break
+        end
+    end
+    k = 0
+    for i in eachindex(x)
+        sol[i][2]=sol1[i].u[2]
+        if isnan(sol1[i].u[2])
+            k = i 
+            @show k
+            break
+        end
+    end
 
-
-
-sol1 = readdlm("C:\\Users\\feder\\OneDrive\\Desktop\\PhD\\maximum_entropy\\ME_1d_1fm.txt") 
-sol = [eval(Meta.parse(sol1[i,3]))[1] for i in 1:lastindex(discretization.grid)-2]
-integral_cauchy_ME(res,1,discretization.grid,sol0)
-regularize!(sol0,discretization)
-
-for t in (5)
-    sol1 = readdlm("C:\\Users\\feder\\OneDrive\\Desktop\\PhD\\maximum_entropy\\ME_1d_"*string(t)*"fm.txt") 
-    sol = [eval(Meta.parse(sol1[i,3]))[1] for i in 1:lastindex(discretization.grid)-2]
-    
-    multdiff=LinearInterpolation([discretization.grid[i][1] for i in 2:lastindex(discretization.grid)-1],sol[:];extrapolation_bc=Flat())
-    
-    integral,err =integral_cauchy_ME(res,t,discretization.grid,multdiff)
-    
+    for i in j:lastindex(discretization.grid)-2
+        sol[i][1]=sol1[j-1].u[1]
+    end
+    for i in k:lastindex(discretization.grid)-2
+        sol[i][2]=sol1[k-1].u[2]
+    end
+        sol1.=sol
 end
+
+
+function distr_function_wrap_2d(result, discretization::CartesianDiscretization, t,fluidpropery,sol)  
+    eta = 0
+    phi = 0
+
+    sol1 = []
+    sol2 = []
+    for i in 2:lastindex(discretization.grid)-1
+        T = result(t)[1,i]
+        ur = result(t)[2,i]
+        
+        mult_n = sol[1][i]
+        mult_diff = sol[2][i]
+        
+        push!(sol1,f_ME(ur,T,pt,eta,phi,etap,phip,mult_n,mult_diff))   
+        push!(sol2,f_ME(ur,T,pt,eta,phi,etap,phip,mult_n,mult_diff))   
+    end
+    return  (sol1,sol2)
+end
+
