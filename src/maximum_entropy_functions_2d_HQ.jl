@@ -1,48 +1,53 @@
+struct Lagr_Multiplier_2D{A<:Float64, B<:Float64} <: Lagr_Multiplier
+    mult_n::A
+    mult_diff::B
+end
+
 """define a charm distribution function that depends on two lagrange multipliers  
 """
-function f_ME(ur,T,pt,m,eta,phi,etap,phip,mult_n,mult_diff)
+function f_ME(T,ur,eta,phi,etap,phip,pt,lm::Lagr_Multiplier_2D; m = 1.5)
     ut = sqrt(1+ur^2)
     mt = sqrt(pt^2+m^2)
     udotp= -ut*mt*cosh(etap-eta)+ur*pt*cos(phip-phi)
-    
-    arg = udotp/T+mult_n-mult_diff*pt*cos(phip-phi)/udotp 
+
+    arg = udotp/T+lm.mult_n-lm.mult_diff*pt*cos(phip-phi)/udotp
     return exp(arg)
 end
 
-
-function charm_density_integrand(ur,T,pt,m,eta,phi,etap,phip,mult_n,mult_diff)
+"""charm quark density, defined with negative sign due to the (-,+,+,+) metric"""
+function charm_density_integrand(T,ur,eta,phi,etap,phip,pt,lm::Lagr_Multiplier_2D; m = 1.5)
     ut = sqrt(1+ur^2)
     mt = sqrt(pt^2+m^2)
     udotp= -ut*mt*cosh(etap-eta)+ur*pt*cos(phip-phi)
-    return -udotp*f_ME(ur,T,pt,m,eta,phi,etap,phip,mult_n,mult_diff)/(2*pi)^3*pt
+    return -udotp*f_ME(T,ur,eta,phi,etap,phip,pt,lm;m)/(2*pi)^3*pt
 end
 
-function charm_current_integrand(ur,T,pt,m,eta,phi,etap,phip,mult_n,mult_diff)
-    return pt*cos(phip-phi)*f_ME(ur,T,pt,m,eta,phi,etap,phip,mult_n,mult_diff)/(2*pi)^3*pt
+function charm_current_integrand(T,ur,eta,phi,etap,phip,pt,lm::Lagr_Multiplier_2D; m = 1.5)
+    return pt*cos(phip-phi)*f_ME(T,ur,eta,phi,etap,phip,pt,lm;m)/(2*pi)^3*pt
 end
 
 
-function charm_density(ur,T,m,mult_n,mult_diff;pt_min=0.,pt_max=8.0,phip_min=0,phip_max=2pi,etap_min=0,etap_max=10,rtol=10E-2)
+function charm_density(T,ur,lm::Lagr_Multiplier_2D;m=1.5,etap_min=0,etap_max=10,phip_min=0,phip_max=2pi,pt_min=0.,pt_max=8.0,rtol=10E-2)
     eta = 0
     phi = 0
-    hcubature( b->2*fmGeV^3*charm_density_integrand(ur,T,b[1],m,eta,phi,b[3],b[2],mult_n,mult_diff),(pt_min,phip_min,etap_min),(pt_max,phip_max,etap_max);rtol=rtol)
+    hcubature( b->2*fmGeV^3*charm_density_integrand(T,ur,eta,phi,b[1],b[2],b[3],lm;m),(etap_min,phip_min,pt_min),(etap_max,phip_max,pt_max);rtol=rtol)
 end
 
-function charm_current(ur,T,m,mult_n,mult_diff;pt_min=0.,pt_max=8.0,phip_min=0,phip_max=2pi,etap_min=0,etap_max=10,rtol=10E-2)
+function charm_current(T,ur,lm::Lagr_Multiplier_2D;m=1.5,etap_min=0,etap_max=10,phip_min=0,phip_max=2pi,pt_min=0.,pt_max=8.0,rtol=10E-2)
     eta = 0
     phi = 0
-    hcubature( b->2*fmGeV^3*charm_current_integrand(ur,T,b[1],m,eta,phi,b[3],b[2],mult_n,mult_diff),(pt_min,phip_min,etap_min),(pt_max,phip_max,etap_max);rtol=rtol)
+    hcubature( b->2*fmGeV^3*charm_current_integrand(T,ur,eta,phi,b[1],b[2],b[3],lm;m),(etap_min,phip_min,pt_min),(etap_max,phip_max,pt_max);rtol=rtol)
 end
 
 
 
 
-function lagrangian_multipliers_system_2(unknown,ur,T,m,n,nur)
-    mult_n=unknown[1]
-    mult_diff=unknown[2]
-    eq_charm_1 = charm_density(ur,T,m,mult_n,mult_diff)[1]-n
-    eq_charm_2 = charm_current(ur,T,m,mult_n,mult_diff)[1]-nur
-    
+function lagrangian_multipliers_system_2(T,ur,nur,n,unknown;m=1.5)
+    lm.mult_n=unknown[1]
+    lm.mult_diff=unknown[2]
+    eq_charm_1 = charm_density(T,ur,lm; m)[1]-n
+    eq_charm_2 = charm_current(T,ur,lm; m)[1]-nur
+
     return SVector{2}(eq_charm_1,eq_charm_2)
 end
 
@@ -59,7 +64,7 @@ function distr_function_2d(result, discretization::CartesianDiscretization, t; g
 
        n = thermodynamic(T,fug,eos.hadron_list).pressure
      
-        _f(unknown,p) = lagrangian_multipliers_system_2(unknown,ur,T,m,n,nur)
+        _f(unknown,p) = lagrangian_multipliers_system_2(T,ur,nur,n,unknown;m)
         problem = NonlinearProblem{false}(_f,SVector{2}(guess_n,guess_nu))
        
         mult_n_temp,mult_diff_temp= solve(problem,NewtonRaphson())      
@@ -111,7 +116,7 @@ function regularize_2d!(sol1,discretization)
 end
 
 
-function distr_function_wrap_2d(result, discretization::CartesianDiscretization, t,fluidpropery,sol)  
+function distr_function_wrap_2d(result, discretization::CartesianDiscretization, t,sol;m = 1.5)  
     eta = 0
     phi = 0
 
@@ -121,12 +126,15 @@ function distr_function_wrap_2d(result, discretization::CartesianDiscretization,
         T = result(t)[1,i]
         ur = result(t)[2,i]
         
-        mult_n = sol[1][i]
-        mult_diff = sol[2][i]
-        
-        push!(sol1,f_ME(ur,T,pt,eta,phi,etap,phip,mult_n,mult_diff))   
-        push!(sol2,f_ME(ur,T,pt,eta,phi,etap,phip,mult_n,mult_diff))   
+        lm.mult_n = sol[1][i]
+        lm.mult_diff = sol[2][i]
+
+        push!(sol1,f_ME(T,ur,eta,phi,etap,phip,pt,lm;m))   
+        push!(sol2,f_ME(ur,T,eta,phi,etap,phip,pt,lm;m))   
     end
     return  (sol1,sol2)
 end
+
+
+
 

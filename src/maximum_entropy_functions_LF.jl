@@ -121,7 +121,7 @@ function lagrangian_multipliers_system(u::AbstractVector,g,mult_E,mult_P,mult_sh
     return SVector{4}(eq_energy,eq_pressure,eq_shear_ϕϕ,eq_shear_ηη)
 end
 
-function distr_function(result, discretization::CartesianDiscretization, t,fluidproperty)  
+function solve_lambda(result, discretization::CartesianDiscretization, t,fluidproperty)  
     x = [discretization.grid[i][1] for i in 2:lastindex(discretization.grid)-1]
 
     mult_E = []
