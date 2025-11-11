@@ -1,9 +1,8 @@
 abstract type Lagr_Multiplier end
 
 struct Lagr_Multiplier_1D{A<:Real} <: Lagr_Multiplier
-    mult_diff::A
+    mult_nu::A
 end
-
 
 """charm distribution function that depends on one lagrange multiplier 
 """
@@ -12,7 +11,7 @@ function f_ME(T,ur,fug,eta,phi,etap,phip,pt,lm::Lagr_Multiplier_1D; m = 1.5)
     mt = sqrt(pt^2+m^2)
     udotp= -ut*mt*cosh(etap-eta)+ur*pt*cos(phip-phi)
 
-    arg = udotp/T+fug+lm.mult_diff*pt*cos(phip-phi)/udotp
+    arg = udotp/T+fug+lm.mult_nu*pt*cos(phip-phi)/udotp
     return exp(arg)
 end
 
@@ -31,7 +30,7 @@ function charm_diff_current_integrand(T,ur,fug,eta,phi,etap,phip,pt,lm::Lagr_Mul
     return pt*cos(phip-phi)*f_ME(T,ur,fug,eta,phi,etap,phip,pt,lm;m)/(2*pi)^3*pt
 end
 
-"""total radial charge current"""
+"""total radial charm current"""
 function charm_total_current_integrand(T,ur,fug,eta,phi,etap,phip,pt,lm::Lagr_Multiplier_1D; m = 1.5)
     ut = sqrt(1+ur^2)
     mt = sqrt(pt^2+m^2)
@@ -41,7 +40,7 @@ end
 
 """integrate the distribution function over the momentum space, to get the charm quark fields. 
 Factor 2 comes from the rapidity integration, made only for positive rapidity.
-In the integration of the distribution funciton, it is possible to impose eta_p = and phi_p = 0, since a sihft for these coordinates does not change the integral result
+In the integration of the distribution function, it is possible to impose eta_p = and phi_p = 0, since a shift for these coordinates does not change the integral result
 """
 function charm_density(T,ur,fug,lm::Lagr_Multiplier_1D;m= 1.5,etap_min=0,etap_max=10,phip_min=0,phip_max=2pi,pt_min=0,pt_max=8.0,rtol=10E-4) 
     eta = 0 
@@ -87,15 +86,17 @@ function lambdar(result, discretization::CartesianDiscretization, t; guess = 0.0
         lm = Lagr_Multiplier_1D(only(punctual_lambda_r.u))
         
         push!(lambda_array,lm)   
-        #guess = lambda_array[i-1] + diff
-        guess = lambda_array[i-1].mult_diff + diff
+        
+        guess = lambda_array[i-1].mult_nu + diff
+
         if (i>2)
-             diff = abs(lambda_array[i-1].mult_diff-lambda_array[i-2].mult_diff)
+             diff = abs(lambda_array[i-1].mult_nu-lambda_array[i-2].mult_nu)
         end
        
     end
     return (lambda_array)
 end
+
 
 """compute the ME distribution function, using the Lagrange multiplier found in lambdar function 
 """
@@ -108,7 +109,7 @@ function distr_function(result, discretization::CartesianDiscretization, t,lambd
         T = result(t)[1,i]
         ur = result(t)[2,i]
         fug = result(t)[6,i]
-        lm.mult_diff = lambda[i]
+        lm.mult_nu = lambda[i]
         push!(distr_function,f_ME(T,ur,fug,eta,phi,etap,phip,pt,lm;m))   
     end
     return  distr_function
