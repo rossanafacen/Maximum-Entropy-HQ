@@ -4,14 +4,24 @@ struct Lagr_Multiplier_1D{A<:Real} <: Lagr_Multiplier
     mult_nu::A
 end
 
+
+function Base.zero(::Type{MaximumEntropy.Lagr_Multiplier_1D{Float64}})
+    MaximumEntropy.Lagr_Multiplier_1D(0.0)
+end
+
+function Base.:+(a::Lagr_Multiplier_1D{Float64}, b::Real) 
+    MaximumEntropy.Lagr_Multiplier_1D(a.mult_nu + float(b))
+end 
+
 """charm distribution function that depends on one lagrange multiplier 
 """
 function f_ME(T,ur,fug,eta,phi,etap,phip,pt,lm::Lagr_Multiplier_1D; m = 1.5)
     ut = sqrt(1+ur^2)
     mt = sqrt(pt^2+m^2)
-    udotp= -ut*mt*cosh(etap-eta)+ur*pt*cos(phip-phi)
+    udotp= -ut*mt*cosh(etap-eta)+ur*pt*cos(phip-phi) #negative defined
+    
+    arg = udotp/T+fug+lm.mult_nu*pt*cos(phip-phi)/udotp  
 
-    arg = udotp/T+fug+lm.mult_nu*pt*cos(phip-phi)/udotp
     return exp(arg)
 end
 
@@ -45,19 +55,19 @@ In the integration of the distribution function, it is possible to impose eta_p 
 function charm_density(T,ur,fug,lm::Lagr_Multiplier_1D;m= 1.5,etap_min=0,etap_max=10,phip_min=0,phip_max=2pi,pt_min=0,pt_max=8.0,rtol=10E-4) 
     eta = 0 
     phi = 0
-    hcubature( b->2*fmGeV^3*charm_density_integrand(T,ur,fug,eta,phi,b[1],b[2],b[3],lm;m),(etap_min,phip_min,pt_min),(etap_max,phip_max,pt_max))[1]
+    hcubature( b->2*fmGeV^3*charm_density_integrand(T,ur,fug,eta,phi,b[1],b[2],b[3],lm;m),(etap_min,phip_min,pt_min),(etap_max,phip_max,pt_max);rtol=rtol)[1]
 end
 
 function charm_diff_current(T,ur,fug,lm::Lagr_Multiplier_1D;m= 1.5,etap_min=0,etap_max=10,phip_min=0,phip_max=2pi,pt_min=0,pt_max=8.0,rtol=10E-4)
     eta = 0 
     phi = 0
-    hcubature( b->2*fmGeV^3*charm_diff_current_integrand(T,ur,fug,eta,phi,b[1],b[2],b[3],lm;m),(etap_min,phip_min,pt_min),(etap_max,phip_max,pt_max))[1]
+    hcubature( b->2*fmGeV^3*charm_diff_current_integrand(T,ur,fug,eta,phi,b[1],b[2],b[3],lm;m),(etap_min,phip_min,pt_min),(etap_max,phip_max,pt_max);rtol=rtol)[1]
 end
 
 function charm_total_current(T,ur,fug,lm::Lagr_Multiplier_1D;m= 1.5,etap_min=0,etap_max=10,phip_min=0,phip_max=2pi,pt_min=0,pt_max=8.0,rtol=10E-4)
     eta = 0 
     phi = 0
-    hcubature( b->2*fmGeV^3*charm_total_current_integrand(T,ur,fug,eta,phi,b[1],b[2],b[3],lm;m),(etap_min,phip_min,pt_min),(etap_max,phip_max,pt_max))[1]
+    hcubature( b->2*fmGeV^3*charm_total_current_integrand(T,ur,fug,eta,phi,b[1],b[2],b[3],lm;m),(etap_min,phip_min,pt_min),(etap_max,phip_max,pt_max);rtol=rtol)[1]
 end
 
 
@@ -68,13 +78,12 @@ function lagrangian_multipliers_system(T,ur,fug,nur,unknown;m=1.5)
 end
 
 
-"""compute the lagrange multiplier over the discretized grid, equating the ME ν with the hydro ν 
+"""compute the lagrange multiplier over the discretized grid, equating the ME ν with the hydro ν. Store the time information too
 """
 function lambdar(result, discretization::CartesianDiscretization, t; guess = 0.0, diff = 0.0, m = 1.5)  
     lambda_array = []    
 
     for i in 2:lastindex(discretization.grid)-1
-    #for i in 2:5
         T = result(t)[1,i]
         ur = result(t)[2,i]
         fug = result(t)[6,i]
@@ -90,26 +99,27 @@ function lambdar(result, discretization::CartesianDiscretization, t; guess = 0.0
         guess = lambda_array[i-1].mult_nu + diff
 
         if (i>2)
-             diff = abs(lambda_array[i-1].mult_nu-lambda_array[i-2].mult_nu)
+            diff = abs(lambda_array[i-1].mult_nu-lambda_array[i-2].mult_nu)
         end
        
     end
-    return (lambda_array)
+    return (lambda_array,t)
 end
 
 
 """compute the ME distribution function, using the Lagrange multiplier found in lambdar function 
 """
-function distr_function(result, discretization::CartesianDiscretization, t,lambda; m = 1.5)  
+function distr_function_vs_r(result, sol, discretization::CartesianDiscretization; etap = 0, phip = 0, pt = 0, m = 1.5)  
     eta = 0
     phi = 0
-   
+    t = sol[2]
     distr_function = []
     for i in 2:lastindex(discretization.grid)-1
+        
         T = result(t)[1,i]
         ur = result(t)[2,i]
         fug = result(t)[6,i]
-        lm.mult_nu = lambda[i]
+        lm = sol[1][i-1]
         push!(distr_function,f_ME(T,ur,fug,eta,phi,etap,phip,pt,lm;m))   
     end
     return  distr_function

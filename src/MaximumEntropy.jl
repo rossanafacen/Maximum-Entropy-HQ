@@ -10,14 +10,17 @@ module MaximumEntropy
     using NonlinearSolve
     using CSV
     using HCubature
+    using StaticArrays
     using Fluidum
     
-
-    include("maximum_entropy_functions_LF.jl")
-    include("maximum_entropy_functions_HQ.jl")
-    include("maximum_entropy_functions_2d_HQ.jl")
-    include("lambda_evolution.jl")
-    include("lambda_evolution_2d.jl")
+    #include("functions_HQ.jl")
+    include("functions_HQ_equilibrium.jl")
+    # include("functions_2d_HQ.jl")
+    # include("functions_LF.jl")
+    # include("functions_2d_LF.jl")
+    # include("functions_LF_no_symmetries.jl")
+    # include("lambda_evolution.jl")
+    # include("lambda_evolution_2d.jl")
     
-    export charm_diff_current, lambdar
+    export charm_diff_current, lambdar, charm_density, lambdan_lambdar
 end 
