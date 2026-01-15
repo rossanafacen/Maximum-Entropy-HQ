@@ -14,9 +14,9 @@ module MaximumEntropy
     using Fluidum
     
     include("functions_HQ.jl")
-    #include("functions_HQ_equilibrium.jl")
+    include("functions_HQ_equilibrium.jl")
     include("functions_2d_HQ.jl")
-    #include("functions_3d_HQ.jl")
+    include("functions_3d_HQ.jl")
     #include("functions_LF.jl")
     # include("functions_2d_LF.jl")
     # include("functions_LF_no_symmetries.jl")
