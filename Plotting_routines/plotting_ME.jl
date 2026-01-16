@@ -72,3 +72,33 @@ function plot_f_ME(field_result,lambda_sol,discretization::CartesianDiscretizati
     ax.set_ylabel(L"f_\mathrm{ME}")
     display(fig)
 end
+
+"""plot the ME spectra and compare it with the multiple species"""
+function spectra_plot_ME(fo::FreezeOutResult{A,B}, lm_funct, particle, detector, fluidproperty; data = false, ccbar, pt_min = 0.2, pt_max = 6.,step = 100) where {A<:SplineInterp,B<:SplineInterp, C<:SplineInterp, D<:SplineInterp}        
+    fig1, ax1 = subplots()
+    plot_params()
+    set_spectra_axis(ax1, detector; pt_max = pt_max)
+    
+    pt = range(pt_min,pt_max,step) 
+    det_params = detector_params(pt)    
+    
+    f_ME = MaximumEntropy.spectra_ME_2d(fo, lm_funct, particle;ccbar = ccbar, pt_min = pt_min, pt_max = pt_max, step = step)
+    f_diff_ooe = Fluidum.spectra_analytic(fo,particle,fluidproperty.eos,pt_max=pt_max,pt_min=pt_min;delta_f=true)
+    
+    
+    cons = det_params[detector.name].cons
+    
+    detector_name = string(detector.name)
+    
+    ax1.plot(pt,cons.*getindex.(f_ME[:],1),"#0C7BDC",label = string("ME"))
+    ax1.plot(pt,cons.*getindex.(f_diff_ooe[:],1),"#FFC20A",label = string("Multiple Species"))
+        
+        
+    if data == true       
+        HC_data, HC_pT, HC_xerr, HC_yerrLow = read_hf(particle.name, string(exp_dir,detector_name),detector)
+        ax1.errorbar(HC_pT,HC_data,xerr=0,yerr=HC_yerrLow,fmt="o",markersize=3,c="black",label= "$(detector_name) data")
+    end
+
+    ax1.legend(title = particle_legends[particle.name], loc="upper right") 
+    return fig1 
+end

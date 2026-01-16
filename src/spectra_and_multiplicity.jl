@@ -1,89 +1,7 @@
 """
-computation of the spectrum at constant time t for 1 lagrange multiplier
-"""
-function spectra_ME(pt,result, discretization::CartesianDiscretization, t,sol; m=1.5, phi_min = 0., phi_max = 2pi, eta_min = 0., eta_max = 10., r_min = 0., r_max = 30.)
-    x = [discretization.grid[i][1] for i in 2:lastindex(discretization.grid)-1]
-    T = LinearInterpolation(x,result(t)[1,2:end-1])
-    ur = LinearInterpolation(x,result(t)[2,2:end-1])
-    fug = LinearInterpolation(x,result(t)[6,2:end-1])
-    interpolated_f_wrap= LinearInterpolation(x,sol)
-       
-    #factor 2 due to etap
-    hcubature(b ->(2*fmGeV^3/(2pi)^3)*t*b[3]*sqrt(b[4]^2+m^2)*cosh(b[1])*f_ME(ur(b[3]),T(b[3]),fug(b[3]),pt,m,
-    b[1],b[2],interpolated_f_wrap(b[3])),(eta_min,phi_min,r_min),(eta_max,phi_max,r_max);rtol=10e-3)
-end
-
-
-"""
-computation of the multiplicity at constant time t for 1 lagrange multiplier
-"""
-function mult_ME(result, discretization::CartesianDiscretization, t,sol; m = 1.5, phi_min = 0., phi_max = 2pi, eta_min = 0., eta_max = 10.,r_min = 0., r_max = 30.,pt_min = 0., pt_max = 10.)
-    x = [discretization.grid[i][1] for i in 2:lastindex(discretization.grid)-1]
-    T = LinearInterpolation(x,result(t)[1,2:end-1])
-    ur = LinearInterpolation(x,result(t)[2,2:end-1])    
-    fug = LinearInterpolation(x,result(t)[6,2:end-1])
-    interpolated_f_wrap= LinearInterpolation(x,sol; extrapolation_bc=Flat())
-
-    hcubature(b ->(2*fmGeV^3/(2pi)^3)*t*b[3]*sqrt(b[4]^2+m^2)*cosh(b[1])*b[4]*f_ME(ur(b[3]),T(b[3]),fug(b[3]),b[4],m,
-    b[1],b[2],interpolated_f_wrap(b[3])),(eta_min,phi_min,r_min,pt_min),(eta_max,phi_max,r_max,pt_max);rtol=10e-4)
-
-end
-
-"""
-computation of the spectrum at constant time t for 2 lagrange multipliers
-"""
-function spectra_ME_2d(pt,result, discretization::CartesianDiscretization, t,sol; m = 1.5, phi_min = 0., phi_max = 2pi, eta_min = 0., eta_max = 10.,r_min = 0., r_max = 30.,)
-    x = [discretization.grid[i][1] for i in 2:lastindex(discretization.grid)-1]
-    T = LinearInterpolation(x,result(t)[1,2:end-1])
-    ur = LinearInterpolation(x,result(t)[2,2:end-1])
-    fug = LinearInterpolation(x,result(t)[6,2:end-1])
-    
-    interpolated_f_wrap_1= LinearInterpolation(x,[sol[i][1] for i in 1:lastindex(discretization.grid)-2]; extrapolation_bc=Flat())
-    interpolated_f_wrap_2= LinearInterpolation(x,[sol[i][2] for i in 1:lastindex(discretization.grid)-2]; extrapolation_bc=Flat())
-    
-    hcubature( b ->(2*fmGeV^3/(2pi)^3)*t*b[3]*sqrt(b[4]^2+m^2)*cosh(b[1])*f_ME(ur(b[3]),T(b[3]),fug(b[3]),pt,m,
-    b[1],b[2],interpolated_f_wrap_1(b[3]),interpolated_f_wrap_2(b[3])),(eta_min,phi_min,r_min),(eta_max,phi_max,r_max);rtol=10e-3)
-end
-
-
-
-"""
-computation of the multiplicity at constant time t for 2 lagrange multipliers
-"""
-function mult_ME_2d(result, discretization::CartesianDiscretization, t,sol; m=1.5, phi_min = 0., phi_max = 2pi, eta_min = 0., eta_max = 10.,r_min = 0., r_max = 30.,pt_min = 0., pt_max = 10.)
-    x = [discretization.grid[i][1] for i in 2:lastindex(discretization.grid)-1]
-    T = LinearInterpolation(x,result(t)[1,2:end-1])
-    ur = LinearInterpolation(x,result(t)[2,2:end-1])
-    fug = LinearInterpolation(x,result(t)[6,2:end-1])
-    
-    interpolated_f_wrap_1= LinearInterpolation(x,[sol[i][1] for i in 1:lastindex(discretization.grid)-2]; extrapolation_bc=Flat())
-    interpolated_f_wrap_2= LinearInterpolation(x,[sol[i][2] for i in 1:lastindex(discretization.grid)-2]; extrapolation_bc=Flat())
-    
-    hcubature( b ->(2*fmGeV^3/(2pi)^3)*t*b[3]*sqrt(b[4]^2+m^2)*cosh(b[1])*f_ME(ur(b[3]),T(b[3]),fug(b[3]),b[4],m,
-    b[1],b[2],interpolated_f_wrap_1(b[3]),interpolated_f_wrap_2(b[3]))*b[4],(eta_min,phi_min,r_min,pt_min),(eta_max,phi_max,r_max,pt_max);rtol=10e-4)
-
-end
-
-
-"""
-computation of the multiplicity at constant time t
-what is the proxy? 
-"""
-function proxy_multiplicity(result, discretization::CartesianDiscretization, t,fluidproperty,sol;m=1.5)
-    x = [discretization.grid[i][1] for i in 2:lastindex(discretization.grid)-1]
-    T = LinearInterpolation(x,result(t)[1,2:end-1])
-    ur = LinearInterpolation(x,result(t)[2,2:end-1])
-    fug = LinearInterpolation(x,result(t)[6,2:end-1])
-    interpolated_f_wrap= LinearInterpolation(x,sol; extrapolation_bc=Flat())
-    
-    hcubature(b ->2.0*π*b[4]*2.0*π*f_ME(ur(b[4]),T(b[4]),fug(b[4]),b[1],m,
-    b[2],b[3],interpolated_f_wrap(b[4]))*b[1],(0.,-1.,0.,0.2),(8.,1.,2pi,30.))
-end
-
-"""
 computation of pμ*Σμ for the spectrum
 """
-function hypersurface_fo(pt,eta,phi,etap,phip,part::particle_attribute{S,R,U,V};ccbar)
+function hypersurface_fo(pt,alpha,x::A,eta,phi,etap,phip,part::Fluidum.particle_attribute{S,R,U,V};ccbar) where {A<:SplineInterp,S,R,U,V}
     m = part.mass
     canonical_supp = Fluidum.besseli(1, ccbar/2)./Fluidum.besseli(0, ccbar/2)
     
@@ -97,6 +15,10 @@ function hypersurface_fo(pt,eta,phi,etap,phip,part::particle_attribute{S,R,U,V};
     end
 
     mt=sqrt(m^2+pt^2)
+    
+    t,r = x(alpha)
+    dta,dra=Fluidum.jacobian(x,alpha)
+    
     r_factor=-dra*mt*cosh(etap-eta)
     t_factor=dta*pt*cos(phip-phi)
     
@@ -108,45 +30,49 @@ end
 """
 computation of the distribution function at the freeze-out 
 """
-function f_ME_fo(pt,alpha,fo::FreezeOutResult{A,B}, lm::Lagr_Multiplier_2D,eta,phi,etap,phip,part::particle_attribute{S,R,U,V})
+function f_ME_fo(pt,alpha,fo::Fluidum.FreezeOutResult{A,B}, lm_funct,eta,phi,etap,phip,part::Fluidum.particle_attribute{S,R,U,V}) where {A<:SplineInterp,B<:SplineInterp,S,R,U,V}
     m = part.mass
     fields = fo.fields(alpha)
+    lm = lm_funct(alpha)
     T = fields[1]
     ur = fields[2]
-    fug = fields[6]
-    m = part.mass
     
-    f_ME(T,ur,fug,eta,phi,etap,phip,pt,lm;m=m)
+    f_ME(T,ur,eta,phi,etap,phip,pt,lm;m=m)
 end
 
 """
-computation of the total spectrum at constant temperature t for 2 lagrange multipliers, at a given momentum 
+computation of the total spectrum at constant temperature for 2 lagrange multipliers, at a given momentum 
 """
-function spectra_ME_2d_fo(pt, fo::FreezeOutResult{A,B}, lm::Lagr_Multiplier_2D, part::particle_attribute{S,R,U,V}; phi_min = 0., phi_max = 2pi, eta_min = 0., eta_max = 10.,r_min = 0., r_max = 30.,)
+function spectra_ME_2d(pt, fo::Fluidum.FreezeOutResult{A,B}, lm_funct, part::Fluidum.particle_attribute{S,R,U,V}; phi_min = 0., phi_max = 2pi, eta_min = 0., eta_max = 10.,ccbar) where {A<:SplineInterp,B<:SplineInterp,S,R,U,V}
     etap = 0
     phip = 0
     x,fields=fo
-    lb=leftbounds(x)
-    rb=rightbounds(x)
+    lb=Fluidum.leftbounds(x)
+    rb=Fluidum.rightbounds(x)
  
-    hcubature(b->(f_ME_fo(pt,b[3],fo,lm,b[1],b[2],etap,phip,part)*
-    hypersurface_fo(pt,b[1],b[2],etap,phip,part;ccbar)),
-    (eta_min,phi_min,lb...),(eta_max,phi_max,rb...);rtol=10e-3)
+    hcubature(b->(2*f_ME_fo(pt,b[3],fo,lm_funct,b[1],b[2],etap,phip,part)*
+    hypersurface_fo(pt,b[3],x,b[1],b[2],etap,phip,part;ccbar=ccbar)),
+    (eta_min,phi_min,lb...),(eta_max,phi_max,rb...);rtol=1e-4)
 end
 
-
-
 """
-computation of the total spectrum at constant temperature t for 2 lagrange multipliers, at a given momentum 
+computation of the total spectrum at constant temperature for 2 lagrange multipliers, in a momentum range 
 """
-function spectra_ME_2d_fo(pt, fo::FreezeOutResult{A,B}, lm::Lagr_Multiplier_2D, part::particle_attribute{S,R,U,V}; phi_min = 0., phi_max = 2pi, eta_min = 0., eta_max = 10.,r_min = 0., r_max = 30.,)
+function spectra_ME_2d(fo::Fluidum.FreezeOutResult{A,B}, lm_funct, part::Fluidum.particle_attribute{S,R,U,V}; phi_min = 0., phi_max = 2pi, eta_min = 0., eta_max = 10.,ccbar,pt_min = 0., pt_max = 10.,step = 100) where {A<:SplineInterp,B<:SplineInterp,S,R,U,V}
     etap = 0
     phip = 0
     x,fields=fo
-    lb=leftbounds(x)
-    rb=rightbounds(x)
+    lb=Fluidum.leftbounds(x)
+    rb=Fluidum.rightbounds(x)
  
-    hcubature(b->(f_ME_fo(pt,b[3],fo,lm,b[1],b[2],etap,phip,part)*
-    hypersurface_fo(pt,b[1],b[2],etap,phip,part;ccbar)),
-    (eta_min,phi_min,lb...),(eta_max,phi_max,rb...);rtol=10e-3)
+    [hcubature(b->(2*f_ME_fo(pt,b[3],fo,lm_funct,b[1],b[2],etap,phip,part)*
+    hypersurface_fo(pt,b[3],x,b[1],b[2],etap,phip,part;ccbar=ccbar)),
+    (eta_min,phi_min,lb...),(eta_max,phi_max,rb...);rtol=1e-4) for pt in range(pt_min, pt_max, step)]
+end
+
+"""
+computation of the multiplicity at constant temperature for 2 lagrange multipliers, in a momentum range 
+"""
+function multiplicity_ME_2d(fo::Fluidum.FreezeOutResult{A,B}, lm_funct, part::Fluidum.particle_attribute{S,R,U,V}; phi_min = 0., phi_max = 2pi, eta_min = 0., eta_max = 10.,ccbar,pt_min = 0., pt_max = 10.,step = 100) where {A<:SplineInterp,B<:SplineInterp,S,R,U,V}
+    [Fluidum.quadgk(pt->2*pi*pt*spectra_ME_2d(pt, fo, lm_funct, part;ccbar=ccbar)[1],pt_min,pt_max;rtol=10e-3)]
 end

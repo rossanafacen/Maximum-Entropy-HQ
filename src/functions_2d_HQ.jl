@@ -6,7 +6,7 @@ end
 
 """define a charm distribution function that depends on two lagrange multipliers  
 """
-function f_ME(T,ur,eta,phi,etap,phip,pt,lm::Lagr_Multiplier_2D; m)
+function f_ME(T,ur,eta,phi,etap,phip,pt,lm::Lagr_Multiplier_2D)
     ut = sqrt(1+ur^2)
     mt = sqrt(pt^2+m^2)
     udotp= -ut*mt*cosh(etap-eta)+ur*pt*cos(phip-phi)
@@ -19,6 +19,7 @@ function f_ME(T,ur,eta,phi,etap,phip,pt,lm::Lagr_Multiplier_2D; m)
 
     return exp(arg)
 end
+
 
 """charm quark density, defined with negative sign due to the (-,+,+,+) metric"""
 function charm_density_integrand(T,ur,eta,phi,etap,phip,pt,lm::Lagr_Multiplier_2D; m)

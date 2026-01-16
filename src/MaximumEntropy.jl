@@ -17,9 +17,7 @@ module MaximumEntropy
     include("functions_HQ_equilibrium.jl")
     include("functions_2d_HQ.jl")
     include("functions_3d_HQ.jl")
-    #include("functions_LF.jl")
-    # include("functions_2d_LF.jl")
-    # include("functions_LF_no_symmetries.jl")
+    include("spectra_and_multiplicity.jl")
     # include("lambda_evolution.jl")
     # include("lambda_evolution_2d.jl")
     
