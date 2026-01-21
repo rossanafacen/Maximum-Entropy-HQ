@@ -26,7 +26,6 @@ function hypersurface_fo(pt,alpha,x::A,eta,phi,etap,phip,part::Fluidum.particle_
 
     return result*deg*canonical_supp*fmGeV^3
 end
-
 """
 computation of the distribution function at the freeze-out 
 """
@@ -50,9 +49,9 @@ function spectra_ME_2d(pt, fo::Fluidum.FreezeOutResult{A,B}, lm_funct, part::Flu
     lb=Fluidum.leftbounds(x)
     rb=Fluidum.rightbounds(x)
  
-    hcubature(b->(2*f_ME_fo(pt,b[3],fo,lm_funct,b[1],b[2],etap,phip,part)*
-    hypersurface_fo(pt,b[3],x,b[1],b[2],etap,phip,part;ccbar=ccbar)),
-    (eta_min,phi_min,lb...),(eta_max,phi_max,rb...);rtol=1e-4)
+    hcubature(b->(2*f_ME_fo(pt,b[3],fo,lm_funct,b[1],b[2],etap,phip,part)
+    *hypersurface_fo(pt,b[3],x,b[1],b[2],etap,phip,part;ccbar=ccbar)
+    ),(eta_min,phi_min,lb...),(eta_max,phi_max,rb...);rtol=1e-4)
 end
 
 """
@@ -64,15 +63,14 @@ function spectra_ME_2d(fo::Fluidum.FreezeOutResult{A,B}, lm_funct, part::Fluidum
     x,fields=fo
     lb=Fluidum.leftbounds(x)
     rb=Fluidum.rightbounds(x)
- 
-    [hcubature(b->(2*f_ME_fo(pt,b[3],fo,lm_funct,b[1],b[2],etap,phip,part)*
-    hypersurface_fo(pt,b[3],x,b[1],b[2],etap,phip,part;ccbar=ccbar)),
-    (eta_min,phi_min,lb...),(eta_max,phi_max,rb...);rtol=1e-4) for pt in range(pt_min, pt_max, step)]
+    [hcubature(b->(2*f_ME_fo(pt,b[3],fo,lm_funct,b[1],b[2],etap,phip,part)
+    *hypersurface_fo(pt,b[3],x,b[1],b[2],etap,phip,part;ccbar=ccbar)
+    ),(eta_min,phi_min,lb...),(eta_max,phi_max,rb...);rtol=1e-4) for pt in range(pt_min, pt_max, step)]
 end
 
 """
 computation of the multiplicity at constant temperature for 2 lagrange multipliers, in a momentum range 
 """
-function multiplicity_ME_2d(fo::Fluidum.FreezeOutResult{A,B}, lm_funct, part::Fluidum.particle_attribute{S,R,U,V}; phi_min = 0., phi_max = 2pi, eta_min = 0., eta_max = 10.,ccbar,pt_min = 0., pt_max = 10.,step = 100) where {A<:SplineInterp,B<:SplineInterp,S,R,U,V}
+function multiplicity_ME_2d(fo::Fluidum.FreezeOutResult{A,B}, lm_funct, part::Fluidum.particle_attribute{S,R,U,V}; ccbar,pt_min = 0., pt_max = 10.,step = 100) where {A<:SplineInterp,B<:SplineInterp,S,R,U,V}
     [Fluidum.quadgk(pt->2*pi*pt*spectra_ME_2d(pt, fo, lm_funct, part;ccbar=ccbar)[1],pt_min,pt_max;rtol=10e-3)]
 end

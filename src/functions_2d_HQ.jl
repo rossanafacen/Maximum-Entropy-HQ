@@ -6,14 +6,13 @@ end
 
 """define a charm distribution function that depends on two lagrange multipliers  
 """
-function f_ME(T,ur,eta,phi,etap,phip,pt,lm::Lagr_Multiplier_2D)
+function f_ME(T,ur,eta,phi,etap,phip,pt,lm::Lagr_Multiplier_2D; m)
     ut = sqrt(1+ur^2)
     mt = sqrt(pt^2+m^2)
     udotp= -ut*mt*cosh(etap-eta)+ur*pt*cos(phip-phi)
 
     p_transv = -ut*ur*mt*cosh(etap-eta)+(ut)^2*pt*cos(phip-phi)
     
-    #arg = udotp+lm.mult_n/exp(T)-lm.mult_nu*pt*cos(phip-phi)/udotp/exp(T)
     arg = udotp/T+lm.mult_n-lm.mult_nu*p_transv/udotp
     #arg = lm.mult_n-lm.mult_nu*p_transv/udotp
 
