@@ -14,7 +14,6 @@ function f_ME(T,ur,eta,phi,etap,phip,pt,lm::Lagr_Multiplier_2D; m)
     p_transv = -ut*ur*mt*cosh(etap-eta)+(ut)^2*pt*cos(phip-phi)
     
     arg = udotp/T+lm.mult_n-lm.mult_nu*p_transv/udotp
-    #arg = lm.mult_n-lm.mult_nu*p_transv/udotp
 
     return exp(arg)
 end
@@ -36,27 +35,26 @@ function charm_diff_current_integrand(T,ur,eta,phi,etap,phip,pt,lm::Lagr_Multipl
 end
 
 
-function charm_density(T,ur,lm::Lagr_Multiplier_2D;m,ccbar,etap_min=0,etap_max=10,phip_min=0,phip_max=2pi,pt_min=0.,pt_max=10.0,rtol=1e-6)
+function charm_density(T,ur,lm::Lagr_Multiplier_2D;m,ccbar,etap_min=0,etap_max=1,phip_min=0,phip_max=2pi,pt_min=0.,pt_max=8.0,rtol=1e-6)
     eta = 0
     phi = 0
     fact = Fluidum.besseli(1, ccbar/2)./Fluidum.besseli(0, ccbar/2)
     hcubature( b->fact*2*fmGeV^3*charm_density_integrand(T,ur,eta,phi,b[1],b[2],b[3],lm;m=m),(etap_min,phip_min,pt_min),(etap_max,phip_max,pt_max);rtol=rtol)[1]
 end
 
-function charm_diff_current(T,ur,lm::Lagr_Multiplier_2D;m,etap_min=0,etap_max=10,phip_min=0,phip_max=2pi,pt_min=0.,pt_max=10.0,rtol=1e-6)
+function charm_diff_current(T,ur,lm::Lagr_Multiplier_2D;m,etap_min=0,etap_max=1,phip_min=0,phip_max=2pi,pt_min=0.,pt_max=8.0,rtol=1e-6)
     eta = 0
     phi = 0
     hcubature(b->2*fmGeV^3*charm_diff_current_integrand(T,ur,eta,phi,b[1],b[2],b[3],lm;m=m),(etap_min,phip_min,pt_min),(etap_max,phip_max,pt_max);rtol=rtol)[1]
 end
 
-
-
-function lagrangian_multipliers_system_2(T,ur,nur,n,unknown;m,ccbar)
+function lagrangian_multipliers_system_2(T,ur,n,nur,unknown;m,ccbar)
     lm = Lagr_Multiplier_2D(unknown[1],unknown[2])
-    eq_charm_1 = (charm_density(T,ur,lm; m = m,ccbar = ccbar)-n) / max(abs(n), 1e-30)
-    eq_charm_2 = (charm_diff_current(T,ur,lm; m = m)-nur) / max(abs(nur), 1e-30)
+    eq_charm_1 = (charm_density(T,ur,lm; m = m,ccbar = ccbar)-n) 
+    eq_charm_2 = (charm_diff_current(T,ur,lm; m = m)-nur) 
     return SVector{2}(eq_charm_1,eq_charm_2)
 end
+
 
 function lambdan_lambdar(result, discretization::CartesianDiscretization, fluidproperty, t; guess_n = 0., guess_nu = 0., diff_n = 0.0,diff_nu = 0.0, m)  
     

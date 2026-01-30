@@ -83,10 +83,11 @@ end
 """
 Energy density integrate p_T*dp_T, as defined in kinetic theory
 """
-function charm_energy_density(ur,lm::Lagr_Multiplier_2D_eq;m,etap_min=0,etap_max=10,phip_min=0,phip_max=2pi,pt_min=0.,pt_max=8.0,rtol=1e-8)
+function charm_energy_density(ur,lm::Lagr_Multiplier_2D_eq;m,ccbar,etap_min=0,etap_max=10,phip_min=0,phip_max=2pi,pt_min=0.,pt_max=8.0,rtol=1e-8)
     eta = 0
     phi = 0 
-    hcubature(b->2*fmGeV^3*energy_integrand(ur,eta,phi,b[1],b[2],b[3],lm;m=m),(etap_min,phip_min,pt_min),(etap_max,phip_max,pt_max);rtol=rtol)[1]
+    fact = Fluidum.besseli(1, ccbar/2)./Fluidum.besseli(0, ccbar/2)
+    hcubature(b->fact*2*fmGeV^3*energy_integrand(ur,eta,phi,b[1],b[2],b[3],lm;m=m),(etap_min,phip_min,pt_min),(etap_max,phip_max,pt_max);rtol=rtol)[1]
 end
 
 """integrate the distribution function over the momentum space, to get the charm quark fields. 
@@ -104,7 +105,7 @@ end
 """
 function lagrangian_multipliers_system_eq_2d(ur,epsilon,n,unknown;m,ccbar)
     lm = Lagr_Multiplier_2D_eq(unknown[1],unknown[2])
-    eq_charm1 = charm_energy_density(ur,lm;m=m)-epsilon 
+    eq_charm1 = charm_energy_density(ur,lm;m=m, ccbar=ccbar)-epsilon 
     eq_charm2 = charm_density(ur,lm;m=m,ccbar = ccbar)-n 
     return SVector{2}(eq_charm1, eq_charm2)
 end
