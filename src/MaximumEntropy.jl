@@ -8,19 +8,17 @@ module MaximumEntropy
     using Symbolics
     using BenchmarkTools
     using NonlinearSolve
+    using Interpolations
     using CSV
     using HCubature
     using StaticArrays
     using Fluidum
     
     include("functions_HQ.jl")
-    include("functions_HQ_equilibrium.jl")
-    include("functions_2d_HQ.jl")
-    include("functions_3d_HQ.jl")
-    include("functions_2d_HQ_desperation.jl")
+    include("2D_ME_HQ_all_hadrons.jl")
+    include("2D_ME_HQ_single_particle.jl")
     include("spectra_and_multiplicity.jl")
-    # include("lambda_evolution.jl")
-    # include("lambda_evolution_2d.jl")
+    include("spectra_and_multiplicity_old.jl")
     
     export charm_diff_current, lambdar, charm_density, lambdan_lambdar
 end 
