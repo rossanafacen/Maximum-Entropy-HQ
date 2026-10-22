@@ -74,10 +74,10 @@ end
 
 
 function fluidum_diffusion_fraction(T, fug, eos, part)
-    q = 1
-    n_i = Fluidum.free_hadron(T, fug, part.Degeneracy, q; m = part.Mass)
+    q = part.Nc + part.Nac
+    n_i = Fluidum.free_hadron(T, fug, part.Degeneracy, q, eos; m = part.Mass)
     norm = Fluidum.normalization(T, fug, eos)
-    return n_i/norm
+    return q*n_i/norm
 end
 
 

@@ -4,13 +4,14 @@ computation of pμ*Σμ for the spectrum
 function hypersurface_fo(pt,alpha,x::A,eta,phi,etap,phip,part::Fluidum.particle_attribute{S,R,U,V};ccbar) where {A<:SplineInterp,S,R,U,V}
     m = part.mass
     deg = part.degeneracy
-    canonical_supp = 1
-    #canonical_supp = Fluidum.besseli(1, ccbar/2)./Fluidum.besseli(0, ccbar/2)
-    #canonical_supp = 1
-    # if part.name == "jp3096zer"
-    #     canonical_supp = 1
-    # end
-
+    
+    q = 1
+    
+    if part.name == "jp3096zer"
+        q = 2
+    end
+    cn_fact = Fluidum.canonical_factor(ccbar, q)
+    
     mt = sqrt(m^2+pt^2)
     
     t,r = x(alpha)
@@ -21,19 +22,20 @@ function hypersurface_fo(pt,alpha,x::A,eta,phi,etap,phip,part::Fluidum.particle_
     
     result = t*r/(2*pi)^3*(r_factor+t_factor)
 
-    return result*deg*canonical_supp*fmGeV^3
+    return result*deg*cn_fact*fmGeV^3
 end
 
 """
 computation of the distribution function at the freeze-out 
 """
-#function f_ME_fo(pt,alpha,fo::Fluidum.FreezeOutResult{A,B}, lm_funct, eta,phi,etap,phip,part::Fluidum.particle_attribute{S,R,U,V}) where {A<:SplineInterp,B<:SplineInterp,S,R,U,V}
 function f_ME_fo(pt,alpha,fo::Fluidum.FreezeOutResult{A,B}, lm_funct, eta,phi,etap,phip,part::Fluidum.particle_attribute{S,R,U,V}) where {A<:SplineInterp,B<:SplineInterp,S,R,U,V}
     m = part.mass
     q = 1
-    # if part.name == "jp3096zer"
-    #     q == 2
-    # end 
+    
+    if part.name == "jp3096zer"
+        q = 2
+    end 
+    
     fields = fo.fields(alpha)
     lm = lm_funct(alpha)
     T = fields[1]
@@ -52,7 +54,7 @@ end
 """
 computation of the total spectrum at constant temperature for 2 lagrange multipliers, at a given momentum 
 """
-#function spectra_ME_2d(pt, fo::Fluidum.FreezeOutResult{A,B}, lm_funct, part::Fluidum.particle_attribute{S,R,U,V}; phi_min = 0., phi_max = 2pi, eta_min = 0., eta_max = 10.,ccbar) where {A<:SplineInterp,B<:SplineInterp,S,R,U,V}
+
 function spectra_ME_2d(pt, fo::Fluidum.FreezeOutResult{A,B}, lm::AbstractVector{<:Lagr_Multiplier_2D}, part::Fluidum.particle_attribute{S,R,U,V}; phi_min = 0., phi_max = 2pi, eta_min = 0., eta_max = 10.,ccbar, alpha_step = length(lm)) where {A<:SplineInterp,B<:SplineInterp,S,R,U,V}
     etap = 0
     phip = 0

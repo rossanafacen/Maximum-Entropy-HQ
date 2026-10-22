@@ -15,10 +15,10 @@ module MaximumEntropy
     using Fluidum
     
     include("functions_HQ.jl")
-    include("2D_ME_HQ_all_hadrons.jl")
-    include("2D_ME_HQ_single_particle.jl")
+    include("2D_HQ_all_hadrons.jl")
+    include("2D_HQ_single_particle.jl")
     include("spectra_and_multiplicity.jl")
     include("spectra_and_multiplicity_old.jl")
     
-    export charm_diff_current, lambdar, charm_density, lambdan_lambdar
+    export charm_diff_current, lambdar, charm_density, lambdan_lambdar, lagrange_multiplier_2D
 end 

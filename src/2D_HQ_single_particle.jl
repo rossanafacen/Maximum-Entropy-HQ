@@ -1,11 +1,11 @@
-function charm_moments_integrand_one_part(T, ur, etap, phip, pt, part, lm::Lagr_Multiplier_2D; ccbar = 1)
+function charm_moments_integrand_one_part(T, ur, etap, phip, pt, part, lm::Lagr_Multiplier_2D; ccbar)
     m = part.Mass
-    q = 1
+    q = part.Nc + part.Nac
     deg = part.Degeneracy
     eta = 0.0
     phi = 0.0
     
-    fact = 1
+    cn_fact = Fluidum.canonical_factor(ccbar, q)
     
     f = f_ME(T, ur, eta, phi, etap, phip, pt, lm; m = m, q = q)
     
@@ -16,14 +16,14 @@ function charm_moments_integrand_one_part(T, ur, etap, phip, pt, part, lm::Lagr_
     p_transv = -ut*ur*mt*cosh(etap-eta) + ut^2*pt*cos(phip - phi)
     
 
-    density_integrand = q*fact*deg*(-udotp)*f/(2π)^3 * pt
-    diff_integrand = q*fact*deg*p_transv*f/(2π)^3 * pt
+    density_integrand = q*cn_fact*deg*(-udotp)*f/(2π)^3 * pt
+    diff_integrand = q*cn_fact*deg*p_transv*f/(2π)^3 * pt
 
 
     return SVector(density_integrand, diff_integrand)
 end
 
-function charm_moments_one_part(T, ur, part, lm::Lagr_Multiplier_2D; ccbar = 1, etap_min = 0.0, etap_max = 10.0, phip_min = 0.0, phip_max = 2π, pt_min = 0.0, pt_max = 10.0, rtol = 1e-4)
+function charm_moments_one_part(T, ur, part, lm::Lagr_Multiplier_2D; ccbar, etap_min = 0.0, etap_max = 10.0, phip_min = 0.0, phip_max = 2π, pt_min = 0.0, pt_max = 10.0, rtol = 1e-4)
     
 
     val = hcubature(b -> 2*fmGeV^3*charm_moments_integrand_one_part(T, ur, b[1], b[2], b[3], part, lm; ccbar = ccbar),

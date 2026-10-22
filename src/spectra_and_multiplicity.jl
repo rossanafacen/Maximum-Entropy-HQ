@@ -4,13 +4,10 @@ computation of pμ*Σμ for the spectrum
 function hypersurface_fo_all_part(pt,alpha,x::A,eta,phi,etap,phip,part;ccbar) where {A<:SplineInterp}
     m = part.Mass
     deg = part.Degeneracy
-    canonical_supp = 1
-    #canonical_supp = Fluidum.besseli(1, ccbar/2)./Fluidum.besseli(0, ccbar/2)
-    #canonical_supp = 1
-    # if part.name == "jp3096zer"
-    #     canonical_supp = 1
-    # end
-
+    q = part.Nc + part.Nac
+    
+    
+    cn_fact = Fluidum.canonical_factor(ccbar, q)
     mt = sqrt(m^2+pt^2)
     
     t,r = x(alpha)
@@ -21,15 +18,13 @@ function hypersurface_fo_all_part(pt,alpha,x::A,eta,phi,etap,phip,part;ccbar) wh
     
     result = t*r/(2*pi)^3*(r_factor+t_factor)
 
-    return result*deg*canonical_supp*fmGeV^3
+    return result*deg*cn_fact*fmGeV^3
 end
 
 function f_ME_fo_all_part(pt,alpha,fo::Fluidum.FreezeOutResult{A,B}, lm_funct, eta,phi,etap,phip,part) where {A<:SplineInterp,B<:SplineInterp}
     m = part.Mass
-    q = 1
-    # if part.name == "jp3096zer"
-    #     q == 2
-    # end 
+    q = part.Nc + part.Nac
+
     fields = fo.fields(alpha)
     lm = lm_funct(alpha)
     T = fields[1]
@@ -60,7 +55,7 @@ end
 """
 computation of the total spectrum at constant temperature for 2 lagrange multipliers, in a momentum range 
 """
-function spectra_ME_2d_all_part(fo::Fluidum.FreezeOutResult{A,B}, lm::AbstractVector{<:Lagr_Multiplier_2D}, part; phi_min = 0., phi_max = 2pi, eta_min = 0., eta_max = 10.,ccbar,pt_min = 0., pt_max = 10.,step = 100, alpha_step = length(lm)) where {A<:SplineInterp,B<:SplineInterp}
+function spectra_ME_2d_all_part(fo::Fluidum.FreezeOutResult{A,B}, lm::AbstractVector{<:Lagr_Multiplier_2D}, part; phi_min = 0., phi_max = 2pi, eta_min = 0., eta_max = 10., ccbar, pt_min = 0., pt_max = 10.,step = 100, alpha_step = length(lm)) where {A<:SplineInterp,B<:SplineInterp}
     etap = 0
     phip = 0
     x,fields=fo

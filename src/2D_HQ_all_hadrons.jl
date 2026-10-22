@@ -20,8 +20,7 @@ function charm_moments_integrand(T, ur, etap, phip, pt, lambda_n, lambda_nu, deg
     total_diff_integrand = 0.0
 
     for (deg, m, q) in zip(degeneracies, masses, charges)
-        #fact = Fluidum.canonical_factor(ccbar, q)
-        fact = 1
+        cn_fact = Fluidum.canonical_factor(ccbar, q)
         mt = sqrt(pt^2 + m^2)
         udotp = -ut*mt*cosh(etap-eta) + ur*pt*cos(phip - phi)
         p_transv = -ut*ur*mt*cosh(etap-eta) + ut^2*pt*cos(phip - phi)
@@ -29,8 +28,8 @@ function charm_moments_integrand(T, ur, etap, phip, pt, lambda_n, lambda_nu, deg
         arg = udotp/T + q*lambda_n - q*lambda_nu*p_transv/udotp
         f = exp(arg)
 
-        total_density_integrand += q*fact*deg*(-udotp)*f/(2π)^3 * pt
-        total_diff_integrand += q*fact*deg*p_transv*f/(2π)^3 * pt
+        total_density_integrand += q*cn_fact*deg*(-udotp)*f/(2π)^3 * pt
+        total_diff_integrand += q*cn_fact*deg*p_transv*f/(2π)^3 * pt
     end
 
     return SVector(total_density_integrand, total_diff_integrand)
@@ -64,7 +63,11 @@ function reconstruct_moments_2D(T, ur, lambda_n, lambda_nu, degeneracies, masses
 end
 
 
-function lagrange_multiplier_2D(fo, params, degeneracies, masses, charges; ccbar, alpha_step)
+function lagrange_multiplier_2D(fo, params, cfg; alpha_step)
+    
+    ccbar = Fluidum.get_ccbar(params.eos.hq_eos) 
+    degeneracies, masses, charges = get_list(cfg; ccbar = ccbar);
+
     x = fo.x
     lb = Fluidum.leftbounds(x) 
     rb = Fluidum.rightbounds(x)
