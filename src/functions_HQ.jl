@@ -25,6 +25,10 @@ struct Lagr_Multiplier_3D{A<:Real, B<:Real, C<:Real} <: Lagr_Multiplier
     mult_nu::C
 end
 
+struct Lagr_Multiplier_2D_LF{A<:Real, B<:Real} <: Lagr_Multiplier
+    mult_e::A
+    mult_P::B
+end
 
 
 function Base.zero(::Type{MaximumEntropy.Lagr_Multiplier_1D{Float64}})
@@ -71,6 +75,12 @@ function get_list(cfg; ccbar)
     return degs, masses, qs
 end
 
+function get_list_LF(cfg)
+    lf = Fluidum.HadronResonanceGas_LF(; name_file = cfg.particle_list)
+    degs = lf.particle_list.Degeneracy
+    masses = lf.particle_list.Mass
+    return degs, masses
+end
 
 
 function fluidum_diffusion_fraction(T, fug, eos, part)
