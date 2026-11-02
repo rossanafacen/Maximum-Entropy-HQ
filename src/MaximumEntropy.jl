@@ -22,6 +22,8 @@ module MaximumEntropy
     
     include("LF\\2D_LF_all_hadrons.jl")
     include("LF\\2D_LF_single_particle.jl")
-    
+    include("LF\\3D_LF_all_hadrons.jl")
+    include("LF\\2D_LF_all_hadrons_LRF.jl")
+    include("LF\\3D_LF_all_hadrons_LRF.jl")
     export charm_diff_current, lambdar, charm_density, lambdan_lambdar, lagrange_multiplier_2D
 end 
