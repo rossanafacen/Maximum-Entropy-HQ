@@ -1,3 +1,27 @@
+####fix also the shear viscosity
+"""
+Maximum Entropy distribution function expressed considering a symmetric 1+1 system, with energy, bulk and shear constraints 
+In this case, since we are using this for freeze-out, we cannot consider the lrf    
+"""
+function f_ME(ur,eta,phi,etap,phip,pt,lm::Lagr_Multiplier_3D_LF; m, theta)
+    ut = sqrt(1+ur^2)
+    mt = sqrt(pt^2+m^2)
+    udotp = -ut*mt*cosh(etap-eta)+ur*pt*cos(phip-phi)
+    
+    pp = pt^2+mt^2/2*(cosh(2etap-2eta)-1)+ur^2*(pt^2*cos(phip-phi)^2+mt^2*cosh(etap-eta)^2)-2ut*ur*mt*pt*cos(phip-phi)*cosh(etap-eta)  
+    
+    g1 = lm.mult_piϕϕ
+    g2 = lm.mult_piηη
+
+    gpp = -(g1+g2)*(ur*mt*cosh(etap-eta)-ut*pt*cos(phip-phi))^2 + g1*pt^2*sin(phip - phi)^2 + g2*mt^2*sinh(etap - eta)^2 #p^⟨μ⟩ p^⟨ν⟩ γ_⟨μν⟩
+    arg = lm.mult_e*udotp - lm.mult_P/udotp*pp + gpp/udotp
+    z = exp(arg)
+    return z/(1 + theta*z)
+end
+
+
+
+
 function LF_moments_integrand(etap, phip, pt, lambda_e, lambda_P, lambda_piϕϕ, lambda_piηη, degeneracies, masses)
     
     eta = 0.0
@@ -11,17 +35,21 @@ function LF_moments_integrand(etap, phip, pt, lambda_e, lambda_P, lambda_piϕϕ,
     g2 = lambda_piηη
     
     for (deg, m) in zip(degeneracies, masses)
+        theta = (-1)^deg #bosons have odd degeneracy, fermions have even degeneracy
+        
         mt = sqrt(pt^2 + m^2)
         p0 = mt*cosh(etap-eta) 
-        p2 = p0^2-m^2 #p = sqrt(E^2 - m^2)
-    
+        p2 = pt^2 + mt^2*sinh(etap-eta)^2 #
         gpp = -(g1+g2)*(pt*cos(phip-phi))^2 + g1*pt^2*sin(phip - phi)^2 + g2*mt^2*sinh(etap - eta)^2 #p^⟨μ⟩ p^⟨ν⟩ γ_⟨μν⟩
     
         pp_ϕϕ = 1/6*(mt^2 + pt^2 - 3*pt^2 *cos(2phi - 2phip) - mt^2 *cosh(2eta - 2etap))
-        pp_ηη = -1/3*(mt^2 + pt^2 - mt^2 *cosh(2eta - 2etap)) 
+        
+        
+        pp_ηη = -1/3*(mt^2 + pt^2 - mt^2 *cosh(2eta - 2etap))      
 
         arg = -lambda_e*p0 + lambda_P*p2/p0 - gpp/p0
-        f = exp(arg)
+        z = exp(arg)
+        f = z/(1 + theta*z)
 
         total_energy_integrand += deg*p0^2*f/(2π)^3 * pt #GeV3
         total_pressure_integrand += deg*1/3*p2*f/(2π)^3 * pt #GeV3
@@ -68,7 +96,7 @@ function reconstruct_moments_3D_LF(lambda_e, lambda_P, lambda_piϕϕ, lambda_pi�
 end
 
 
-function lagrange_multiplier_3D_LF_LRF(fo, hrg::Fluidum.HadronResonanceGas_LF; alpha_step)
+function lagrange_multiplier_3D_LF_LRF(fo, hrg::Fluidum.HadronResonanceGas_LF, params; alpha_step)
     
     degeneracies = hrg.particle_list.Degeneracy
     masses = hrg.particle_list.Mass
@@ -77,6 +105,7 @@ function lagrange_multiplier_3D_LF_LRF(fo, hrg::Fluidum.HadronResonanceGas_LF; a
     lb = Fluidum.leftbounds(x) 
     rb = Fluidum.rightbounds(x)
     alpha_array = range(lb[1], rb[1]; length = alpha_step)
+    #alpha_array = range(0.32, rb[1]; length = alpha_step)
     
     epsilon_ME = zeros(length(alpha_array))
     P_ME = copy(epsilon_ME);
@@ -94,10 +123,10 @@ function lagrange_multiplier_3D_LF_LRF(fo, hrg::Fluidum.HadronResonanceGas_LF; a
         piηη = V[4]/fmGeV^3
         piB = V[5]/fmGeV^3
         
-        thermo = Fluidum.thermodynamic(T,hrg)
+        thermo = Fluidum.thermodynamic(T, params.eos)
         
-        epsilon = T*thermo.pressure_derivative[1] - thermo.pressure
-        P = thermo.pressure + piB
+        epsilon = (T*thermo.pressure_derivative[1] - thermo.pressure)/fmGeV^3
+        P = thermo.pressure/fmGeV^3 + piB
 
         if i == 1
             guess = SVector(1/T, 0.0, 0.0, 0.0)

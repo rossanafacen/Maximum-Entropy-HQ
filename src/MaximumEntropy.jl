@@ -17,12 +17,13 @@ module MaximumEntropy
     include("functions_HQ.jl")
     include("2D_HQ_all_hadrons.jl")
     include("2D_HQ_single_particle.jl")
-    include("spectra_and_multiplicity.jl")
-    include("spectra_and_multiplicity_old.jl")
+    include("part_dic_spectra_and_multiplicity.jl")
     
     include("LF\\2D_LF_all_hadrons.jl")
     include("LF\\2D_LF_single_particle.jl")
     include("LF\\3D_LF_all_hadrons.jl")
+    
+    include("LF\\1D_LF_all_hadrons_LRF.jl")
     include("LF\\2D_LF_all_hadrons_LRF.jl")
     include("LF\\3D_LF_all_hadrons_LRF.jl")
     export charm_diff_current, lambdar, charm_density, lambdan_lambdar, lagrange_multiplier_2D

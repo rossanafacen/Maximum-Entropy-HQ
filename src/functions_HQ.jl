@@ -25,6 +25,11 @@ struct Lagr_Multiplier_3D{A<:Real, B<:Real, C<:Real} <: Lagr_Multiplier
     mult_nu::C
 end
 
+
+struct Lagr_Multiplier_1D_LF{A<:Real} <: Lagr_Multiplier
+    mult_e::A
+end
+
 struct Lagr_Multiplier_2D_LF{A<:Real, B<:Real} <: Lagr_Multiplier
     mult_e::A
     mult_P::B

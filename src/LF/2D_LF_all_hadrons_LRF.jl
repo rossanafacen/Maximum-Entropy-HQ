@@ -1,12 +1,16 @@
 """
-Maximum Entropy distribution function expressed considering a symmetric 1+1 system, with energy and bulk constraints 
+Maximum Entropy distribution function expressed considering a symmetric 1+1 system, with energy and bulk constraints
+In this case, since we are using this for freeze-out, we cannot consider the lrf     
 """
-function f_ME_LF(eta, etap, pt, lm::Lagr_Multiplier_2D_LF; m)
+function f_ME(ur, eta, phi, etap, phip, pt, lm::Lagr_Multiplier_2D_LF; m, theta)
+    ut = sqrt(1+ur^2)
     mt = sqrt(pt^2+m^2)
-    p0 = mt*cosh(etap-eta) 
-    p2 = p0^2-m^2 #p = sqrt(E^2 - m^2)
-    arg = -lambda_e*p0 + lambda_P*p2/p0
-    return exp(arg)
+    udotp= -ut*mt*cosh(etap-eta) + ur*pt*cos(phip-phi)
+    pp = pt^2+mt^2/2*(cosh(2*etap-2*eta)-1)+ur^2*(pt^2*cos(phip-phi)^2+mt^2*cosh(etap-eta)^2)-2ut*ur*mt*pt*cos(phip-phi)*cosh(etap-eta) #p^⟨μ⟩ p_⟨μ⟩ 
+    
+    arg = lm.mult_e*udotp-lm.mult_P/udotp*pp
+    z = exp(arg)
+    return z/(1 + theta*z)
 end
 
 
@@ -16,13 +20,14 @@ function LF_moments_integrand(etap, pt, lambda_e, lambda_P, degeneracies, masses
     total_pressure_integrand = 0.0
 
     for (deg, m) in zip(degeneracies, masses)
+        theta = (-1)^deg #bosons have odd degeneracy, fermions have even degeneracy
         mt = sqrt(pt^2 + m^2)
         p0 = mt*cosh(etap-eta) 
         p2 = p0^2-m^2 #p = sqrt(E^2 - m^2)
     
-        arg = -lambda_e*p0 + lambda_P/p0*p2
-        f = exp(arg)
-
+        arg = -lambda_e*p0 + lambda_P*p2/p0    
+        z = exp(arg)
+        f = z/(1 + theta*z)
         total_energy_integrand += deg*p0^2*f/(2π)^3 * pt #GeV3
         total_pressure_integrand += deg*1/3*p2*f/(2π)^3 * pt #GeV3
     end
@@ -58,7 +63,7 @@ function reconstruct_moments_2D(lambda_e, lambda_P, degeneracies, masses; rtol =
 end
 
 
-function lagrange_multiplier_2D_LF_LRF(fo, hrg::Fluidum.HadronResonanceGas_LF; alpha_step)
+function lagrange_multiplier_2D_LF_LRF(fo, hrg::Fluidum.HadronResonanceGas_LF, params; alpha_step)
     
     degeneracies = hrg.particle_list.Degeneracy
     masses = hrg.particle_list.Mass
@@ -80,10 +85,10 @@ function lagrange_multiplier_2D_LF_LRF(fo, hrg::Fluidum.HadronResonanceGas_LF; a
         T = V[1]
         piB = V[5]/fmGeV^3
         
-        thermo = Fluidum.thermodynamic(T,hrg)
+        thermo = Fluidum.thermodynamic(T, params.eos)
         
-        epsilon = T*thermo.pressure_derivative[1] - thermo.pressure
-        P = thermo.pressure + piB
+        epsilon = (T*thermo.pressure_derivative[1] - thermo.pressure)/fmGeV^3
+        P = thermo.pressure/fmGeV^3 + piB
 
         if i == 1
             guess = SVector(1/T, 0.0)

@@ -21,13 +21,14 @@ function LF_moments_integrand(ur, etap, phip, pt, lambda_e, lambda_P, degeneraci
     total_pressure_integrand = 0.0
 
     for (deg, m) in zip(degeneracies, masses)
+        theta = (-1)^deg #bosons have odd degeneracy, fermions have even degeneracy
         mt = sqrt(pt^2 + m^2)
         udotp = -ut*mt*cosh(etap-eta) + ur*pt*cos(phip - phi)
         
         pp = pt^2+mt^2/2*(cosh(2*etap-2*eta)-1)+ur^2*(pt^2*cos(phip-phi)^2+mt^2*cosh(etap-eta)^2)-2ut*ur*mt*pt*cos(phip-phi)*cosh(etap-eta) #p^⟨μ⟩ p_⟨μ⟩ 
         
         arg = lambda_e*udotp-lambda_P/udotp*pp
-        f = exp(arg)
+        f = (exp(arg) + theta)^(-1)
 
         total_energy_integrand += deg*udotp^2*f/(2π)^3 * pt #GeV3
         total_pressure_integrand += deg*1/3*pp*f/(2π)^3 * pt #GeV3
